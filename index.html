@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>خُطـوة | رفيق التطوير الذاتي وبناء العادات</title>
+  
+  <!-- PWA & Mobile Meta -->
+  <meta name="theme-color" content="#090d16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="خُطوة">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+
+  <!-- الخط العربي الجميل -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- حاوية التطبيق الرئيسية للموبايل والديسكتوب -->
+  <div class="app-container">
+
+    <!-- شريط الرأس العلوي -->
+    <header class="app-header">
+      <div class="brand-wrapper">
+        <img src="icons/icon.svg" alt="خُطوة" class="app-logo">
+        <div class="brand-info">
+          <h1>خُـطـوة</h1>
+          <p>رفيق التطوير الذاتي وبناء العادات</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btnPrivacyToggle" class="btn-icon" title="درع الخصوصية (إخفاء التفاصيل الحساسة)">
+          🛡️
+        </button>
+        <button id="btnThemeToggle" class="btn-icon" title="تبديل السمة (ليلي / فاتح)">
+          🌙
+        </button>
+        <button id="btnInstallGuide" class="btn-icon" onclick="khutwaApp.openModal('modalInstallGuide')" title="إضافة التطبيق إلى شاشة هاتفك">
+          📲
+        </button>
+      </div>
+    </header>
+
+    <!-- شريط التاريخ المزدوج (هجري وميلادي) -->
+    <div class="date-strip">
+      <div class="date-hijri" id="headerHijriDate">
+        <span>🌙</span> <span id="txtHijriDate">جاري الحساب...</span>
+      </div>
+      <div class="date-gregorian" id="headerGregorianDate">
+        <span id="txtGregorianDate">--</span>
+      </div>
+    </div>
+
+    <!-- بنر الإضافة لشاشة الموبايل (ليفتح كأيقونة مستقلة خارج متصفح كروم) -->
+    <div id="pwaInstallBanner" class="pwa-install-banner" style="display: none;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.6rem;">📲</span>
+        <div>
+          <div style="font-weight: 800; font-size: 0.88rem; color: #fff;">إضافة إلى شاشة الهاتف الرئيسية</div>
+          <div style="font-size: 0.74rem; color: #94a3b8;">ليفتح كأيقونة مستقلة شاشة كاملة وبدون متصفح كروم</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem; width: auto;" onclick="khutwaApp.installPWA()">
+          إضافة للشاشة
+        </button>
+        <button class="btn-icon" style="width: 30px; height: 30px; font-size: 0.75rem;" onclick="khutwaApp.dismissInstallBanner()">✕</button>
+      </div>
+    </div>
+
+    <!-- ==================== التبويب الأول: لوحة اليوم (Dashboard) ==================== -->
+    <main id="tabToday" class="tab-content active">
+      
+      <!-- بطاقة الصلاة القادمة والعداد التنازلي -->
+      <section class="card prayer-hero-card">
+        <div class="prayer-hero-flex">
+          <div>
+            <div class="next-prayer-label" id="nextPrayerLabel">الصلاة القادمة</div>
+            <div class="next-prayer-name" id="nextPrayerName">جاري الحساب...</div>
+            <div class="next-prayer-time" id="nextPrayerTime">--:--</div>
+          </div>
+          <div class="prayer-countdown-box">
+            <div class="countdown-digits" id="prayerCountdown">--:--:--</div>
+            <div class="countdown-desc">متبقي على الأذان</div>
+          </div>
+        </div>
+
+        <!-- أزرار تفقد الصلوات اليومية السريعة -->
+        <div class="prayers-grid" id="todayPrayersGrid">
+          <!-- يتم التوليد التلقائي بالجافاسكريبت -->
+        </div>
+
+        <!-- مؤشر الإنجاز اليومي العام -->
+        <div class="daily-progress-row">
+          <div class="progress-bar-container">
+            <div class="progress-info">
+              <span>إنجاز اليوم الإجمالي</span>
+              <span id="txtDailyRate">0%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" id="barDailyRate" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- بطاقة الأذكار السريعة لليوم -->
+      <section class="card">
+        <div class="card-title-row">
+          <h3 class="card-title"><span>📿</span> وِرد اليوم من الأذكار</h3>
+          <span class="card-badge" id="athkarSummaryBadge">غير مكتمل</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="prayer-box" id="quickMorningAthkar" onclick="khutwaApp.toggleQuickAthkar('morning')">
+            <span class="p-name">أذكار الصباح</span>
+            <span class="p-check" id="quickMorningCheck">⚪</span>
+          </div>
+          <div class="prayer-box" id="quickEveningAthkar" onclick="khutwaApp.toggleQuickAthkar('evening')">
+            <span class="p-name">أذكار المساء</span>
+            <span class="p-check" id="quickEveningCheck">⚪</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ويدجت شرب الماء التفاعلي -->
+      <section class="card water-tracker-card">
+        <div class="water-display-row">
+          <div>
+            <div style="font-size: 0.85rem; font-weight: 700; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+              <span>💧</span> ترطيب الجسم وشرب الماء
+            </div>
+            <div class="water-metric-box">
+              <span class="water-cups-num" id="txtWaterCups">0</span>
+              <span class="water-target-lbl">/ <span id="txtWaterTarget">8</span> أكواب (<span id="txtWaterLiters">0</span> لتر)</span>
+            </div>
+          </div>
+          <button class="btn-water-action" onclick="khutwaApp.addWaterCup()">
+            <span>+</span> كوب ماء (250 مل)
+          </button>
+        </div>
+
+        <!-- الأكواب البصرية التفاعلية -->
+        <div class="water-glasses-grid" id="waterGlassesContainer">
+          <!-- تولد 8 أكواب بالجافاسكريبت -->
+        </div>
+
+        <div class="water-actions-bar">
+          <button class="btn-icon" style="height: 32px; font-size: 0.75rem; width: auto; padding: 0 10px;" onclick="khutwaApp.removeWaterCup()" title="إنقاص كوب">
+            - إنقاص كوب
+          </button>
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text-muted);">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;">
+              <input type="checkbox" id="chkWaterReminder" checked onchange="khutwaApp.toggleWaterReminder(this.checked)">
+              تذكير دوري بالماء
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- ويدجت العمل والإنتاجية -->
+      <section class="card work-tracker-card">
+        <div class="card-title-row">
+          <h3 class="card-title"><span>💼</span> عمل وإنتاجية اليوم</h3>
+          <span class="card-badge" id="workStatusBadge">لم يسجل بعد</span>
+        </div>
+
+        <div class="work-status-toggle-row">
+          <span style="font-size: 0.88rem; font-weight: 700;">هل حققت شغلك المطلوب اليوم؟</span>
+          <button class="work-toggle-btn" id="btnToggleWorkDone" onclick="khutwaApp.toggleWorkStatus()">
+            نعم، اشتغلت وأنجزت ✓
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
+          <div style="flex: 1;">
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 2px;">ساعات العمل المنجزة:</label>
+            <input type="number" id="inputWorkHours" class="form-input" style="padding: 6px 10px; font-size: 0.85rem;" min="0" max="24" step="0.5" value="0" onchange="khutwaApp.saveWorkHours(this.value)">
+          </div>
+          <div style="flex: 2;">
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 2px;">ملاحظة سريعة حول الشغل:</label>
+            <input type="text" id="inputWorkNote" class="form-input" style="padding: 6px 10px; font-size: 0.85rem;" placeholder="مثال: إنهاء تقرير، تصميم، مذاكرة..." onchange="khutwaApp.saveWorkNote(this.value)">
+          </div>
+        </div>
+      </section>
+
+      <!-- ويدجت تمرين الضغط (Push-ups) المخصص -->
+      <section class="card">
+        <div class="card-title-row">
+          <h3 class="card-title"><span>💪</span> تمرين الضغط اليومي (Push-ups)</h3>
+          <span class="card-badge" id="pushupsBadge">0 ضغطة</span>
+        </div>
+        <div class="pushups-widget-row">
+          <div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">المجموع اليوم:</div>
+            <div class="pushups-count-badge" id="txtPushupsToday">0 <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal;">/ 50 ضغطة</span></div>
+          </div>
+          <div class="pushups-btn-group">
+            <button class="btn-pushup-add" onclick="khutwaApp.addPushupReps(5)">+5</button>
+            <button class="btn-pushup-add" onclick="khutwaApp.addPushupReps(10)">+10</button>
+            <button class="btn-pushup-add" onclick="khutwaApp.addPushupReps(25)">+25</button>
+            <button class="btn-icon" style="width: 32px; height: 32px; font-size: 0.8rem;" onclick="khutwaApp.resetPushups()" title="تصفير">🔄</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- بطاقة عادات اليوم الإيجابية -->
+      <section class="card">
+        <div class="card-title-row">
+          <h3 class="card-title"><span>🎯</span> باقي العادات اليومية</h3>
+          <button class="card-badge" onclick="khutwaApp.openModal('modalAddHabit')" style="cursor: pointer; border: none;">+ إضافة عادة</button>
+        </div>
+        <div class="habits-list" id="todayHabitsList">
+          <!-- يتم ملء العادات ديناميكياً -->
+        </div>
+      </section>
+
+      <!-- نبذة سريعة عن حصن النقاء -->
+      <section class="card shield-card" id="quickShieldCard">
+        <div class="card-title-row">
+          <h3 class="card-title"><span>🛡️</span> حصن النقاء والحرية</h3>
+          <span class="stage-pill" id="quickStagePill">🌱 البداية</span>
+        </div>
+        <div class="streak-counter-box" style="margin-bottom: 0;">
+          <div class="streak-time-grid">
+            <div class="time-unit-box">
+              <div class="time-unit-val" id="quickDays">0</div>
+              <div class="time-unit-lbl">أيام</div>
+            </div>
+            <div class="time-unit-box">
+              <div class="time-unit-val" id="quickHours">0</div>
+              <div class="time-unit-lbl">ساعات</div>
+            </div>
+            <div class="time-unit-box">
+              <div class="time-unit-val" id="quickMins">0</div>
+              <div class="time-unit-lbl">دقائق</div>
+            </div>
+            <div class="time-unit-box">
+              <div class="time-unit-val" id="quickSecs">0</div>
+              <div class="time-unit-lbl">ثواني</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ==================== التبويب الثاني: الصلوات والأذكار ==================== -->
+    <section id="tabSpiritual" class="tab-content">
+      
+      <!-- جدول مواقيت الصلاة المفصل -->
+      <div class="card">
+        <div class="card-title-row">
+          <h3 class="card-title"><span>🕌</span> مواقيت الصلاة المفصلة</h3>
+          <span class="card-badge" id="prayerLocationBadge">القاهرة</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;" id="detailedPrayersList">
+          <!-- تفاصيل كل صلاة وسننها -->
+        </div>
+      </div>
+
+      <!-- محطة الأذكار والسبحة الإلكترونية -->
+      <div class="card">
+        <div class="card-title-row">
+          <h3 class="card-title"><span>📿</span> السبحة الإلكترونية</h3>
+          <span class="card-badge" id="totalTasbeehBadge">مجموع: 0</span>
+        </div>
+
+        <div class="tasbeeh-container">
+          <div class="tasbeeh-phrase" id="tasbeehCurrentPhrase">سُبْحَانَ اللَّهِ</div>
+          
+          <button class="tasbeeh-circle-btn" id="btnTasbeehCount" onclick="khutwaApp.incrementTasbeeh()">
+            <span class="tasbeeh-count" id="tasbeehCountDisplay">0</span>
+            <span class="tasbeeh-target" id="tasbeehTargetDisplay">الهدف: 33</span>
+          </button>
+
+          <div class="tasbeeh-controls">
+            <button class="btn-icon" onclick="khutwaApp.resetTasbeeh()" title="تصفير العداد">🔄</button>
+            <select class="form-select" id="selTasbeehPreset" onchange="khutwaApp.changeTasbeehPreset(this.value)" style="padding: 6px 10px; font-size: 0.85rem; width: auto;">
+              <!-- خيارات الأذكار -->
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- قائمة أذكار الصباح والمساء التفاعلية -->
+      <div class="card">
+        <div class="card-title-row">
+          <h3 class="card-title"><span>📖</span> أذكار اليوم الكاملة</h3>
+          <div style="display: flex; gap: 6px;">
+            <button class="card-badge" id="btnShowMorningAthkar" onclick="khutwaApp.showAthkarCategory('morning')" style="cursor: pointer;">الصباح</button>
+            <button class="card-badge" id="btnShowEveningAthkar" onclick="khutwaApp.showAthkarCategory('evening')" style="cursor: pointer; opacity: 0.6;">المساء</button>
+            <button class="card-badge" id="btnShowAfterPrayerAthkar" onclick="khutwaApp.showAthkarCategory('afterPrayer')" style="cursor: pointer; opacity: 0.6;">بعد الصلاة</button>
+          </div>
+        </div>
+
+        <div id="fullAthkarListContainer">
+          <!-- تعرض عناصر الأذكار المختارة مع عداداتها -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== التبويب الثالث: بناء العادات ==================== -->
+    <section id="tabHabits" class="tab-content">
+      
+      <div class="card">
+        <div class="card-title-row">
+          <h3 class="card-title"><span>⚡</span> متابعة العادات الإيجابية</h3>
+          <button class="card-badge" onclick="khutwaApp.openModal('modalAddHabit')" style="cursor: pointer; border: none;">+ عادة جديدة</button>
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
+          "أحب الأعمال إلى الله أدومها وإن قل". الالتزام اليومي البسيط يبني شخصيتك الحقيقية.
+        </p>
+
+        <div class="habits-list" id="manageHabitsList">
+          <!-- قائمة العادات الكاملة -->
+        </div>
+      </div>
+
+      <!-- نصائح بناء العادات (Atomic Habits) -->
+      <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.04) 100%);">
+        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; color: var(--accent-emerald-light);">💡 قاعدة الدقيقتين</h4>
+        <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.6;">
+          إذا أردت تثبيت عادة جديدة، ابدأ بجعلها تأخذ أقل من دقيقتين (مثلاً: اقرأ صفحة واحدة، أو العب تمرين ضغط واحد). السهولة تكسر حاجز الكسل وتبني سلسلة الالتزام.
+        </p>
+      </div>
+
+    </section>
+
+    <!-- ==================== التبويب الرابع: حصن النقاء (تجنب العادات) ==================== -->
+    <section id="tabShield" class="tab-content">
+      
+      <div class="card shield-card">
+        <div class="shield-header">
+          <div>
+            <h3 class="card-title" id="shieldDisplayTitle"><span>🛡️</span> حصن النقاء والتعافي</h3>
+            <span style="font-size: 0.78rem; color: var(--text-dim);" id="shieldStartDateText">منذ: --</span>
+          </div>
+          <button class="shield-privacy-toggle" onclick="khutwaApp.toggleDiscreetMode()">
+            <span id="privacyIcon">🔒</span> <span id="privacyText">وضع الخصوصية</span>
+          </button>
+        </div>
+
+        <div class="streak-counter-box">
+          <div class="streak-time-grid">
+            <div class="time-unit-box">
+              <div class="time-unit-val" id="shieldDays">0</div>
+              <div class="time-unit-lbl">يوم</div>
+            </div>
+            <div class="time-unit-box">
+              <div class="time-unit-val" id="shieldHours">0</div>
+              <div class="time-unit-lbl">ساعة</div>
+            </div>
+            <div class="time-unit-box">
+              <div class="time-unit-val" id="shieldMins">0</div>
+              <div class="time-unit-lbl">دقيقة</div>
+            </div>
+            <div class="time-unit-box">
+              <div class="time-unit-val" id="shieldSecs">0</div>
+              <div class="time-unit-lbl">ثانية</div>
+            </div>
+          </div>
+
+          <div class="stage-pill" id="shieldStagePill">
+            <span id="shieldStageBadge">🌱</span>
+            <span id="shieldStageTitle">البداية والانطلاق</span>
+          </div>
+        </div>
+
+        <!-- أزرار التدخل والمواجهة -->
+        <div class="shield-actions-row">
+          <button class="btn-urge" onclick="khutwaApp.openUrgeSurfingModal()">
+            <span>🌊</span> مواجهة الرغبة (تنفس)
+          </button>
+          <button class="btn-relapse" onclick="khutwaApp.openRelapseModal()">
+            <span>❤️‍🩹</span> تسجيل عثرة وتجديد العهد
+          </button>
+        </div>
+      </div>
+
+      <!-- بطاقة مراحل النقاء (Milestones) -->
+      <div class="card">
+        <h4 class="card-title" style="margin-bottom: 12px;"><span>🏆</span> مراحل التعافي وإعادة التوازن</h4>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem;" id="stagesProgressList">
+          <!-- يتم رسم المراحل وتوضيح التي تم اجتيازها -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== التبويب الخامس: التحليلات والإعدادات ==================== -->
+    <section id="tabAnalytics" class="tab-content">
+      
+      <!-- شريط اختيار فترة التحليل (يومي | أسبوعي | شهري | سنوي) -->
+      <div class="period-selector-bar">
+        <button class="period-btn active" id="btnPeriodWeek" onclick="khutwaApp.switchAnalyticsPeriod('week', this)">أسبوعي (7 أيام)</button>
+        <button class="period-btn" id="btnPeriodDay" onclick="khutwaApp.switchAnalyticsPeriod('day', this)">اليوم</button>
+        <button class="period-btn" id="btnPeriodMonth" onclick="khutwaApp.switchAnalyticsPeriod('month', this)">شهري (30 يوم)</button>
+        <button class="period-btn" id="btnPeriodYear" onclick="khutwaApp.switchAnalyticsPeriod('year', this)">سنوي (365 يوم)</button>
+      </div>
+
+      <!-- تقرير المرشد الذكي: ماذا طوّرت وأين قصّرت؟ -->
+      <div class="card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%); border-color: rgba(16, 185, 129, 0.3);">
+        <div class="card-title-row">
+          <h3 class="card-title"><span>🧠</span> تقرير المرشد وتحليل العادات</h3>
+          <span class="card-badge" id="coachPeriodBadge">التقرير الأسبوعي</span>
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">
+          تحليل ذكي تلقائي لعاداتك يكشف بصدق ما أحسنت فيه وما يحتاج إلى انتباهك وتركيزك:
+        </p>
+
+        <!-- ما الذي تطورت فيه؟ -->
+        <div class="coach-insight-card" style="border-right: 3px solid #10b981;">
+          <div class="insight-header" style="color: #34d399;">
+            <span>🚀</span> ما الذي تطورت فيه وتفوقت؟ (نقاط القوة)
+          </div>
+          <ul class="insight-list" id="coachStrengthsList">
+            <!-- يتم الملء تلقائياً -->
+          </ul>
+        </div>
+
+        <!-- أين قصرت وماذا تحتاج لتحسينه؟ -->
+        <div class="coach-insight-card" style="border-right: 3px solid #f59e0b;">
+          <div class="insight-header" style="color: #fbbf24;">
+            <span>⚠️</span> أين قصرت وماذا يحتاج تركيزك؟ (فرص التحسين)
+          </div>
+          <ul class="insight-list" id="coachWeaknessesList">
+            <!-- يتم الملء تلقائياً -->
+          </ul>
+        </div>
+
+        <!-- سجل التعديلات والتغييرات على عاداتك -->
+        <div class="coach-insight-card" style="border-right: 3px solid #8b5cf6;">
+          <div class="insight-header" style="color: #a78bfa;">
+            <span>🔄</span> سجل التغييرات على العادات (ماذا غيرت مؤخراً؟)
+          </div>
+          <ul class="insight-list" id="coachAuditHistoryList">
+            <!-- يتم الملء تلقائياً -->
+          </ul>
+        </div>
+      </div>
+
+      <!-- إحصائيات عامة -->
+      <div class="card">
+        <div class="card-title-row">
+          <h3 class="card-title"><span>📊</span> مؤشرات الأداء للفترة المختارة</h3>
+        </div>
+        <div class="stats-grid-row">
+          <div class="stat-metric-card">
+            <div class="stat-metric-num" id="statPrayerRate">0%</div>
+            <div class="stat-metric-label">التزام الصلوات</div>
+          </div>
+          <div class="stat-metric-card">
+            <div class="stat-metric-num" id="statHabitsRate">0%</div>
+            <div class="stat-metric-label">التزام العادات</div>
+          </div>
+          <div class="stat-metric-card">
+            <div class="stat-metric-num" id="statMaxCleanDays">0</div>
+            <div class="stat-metric-label">أيام النقاء الحالية</div>
+          </div>
+          <div class="stat-metric-card">
+            <div class="stat-metric-num" id="statTotalTasbeeh">0</div>
+            <div class="stat-metric-label">التسبيحات الإجمالية</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- رسم بياني للالتزام بالصلوات -->
+      <div class="card">
+        <h4 class="card-title" style="margin-bottom: 8px;"><span>🕌</span> منحنى الالتزام بالصلوات (<span id="chartPrayersPeriodLabel">7 أيام</span>)</h4>
+        <div class="chart-container">
+          <canvas id="chartWeeklyPrayers" class="chart-canvas" width="400" height="180"></canvas>
+        </div>
+      </div>
+
+      <!-- رسم بياني للالتزام بالعادات -->
+      <div class="card">
+        <h4 class="card-title" style="margin-bottom: 8px;"><span>🎯</span> منحنى إنجاز العادات (<span id="chartHabitsPeriodLabel">7 أيام</span>)</h4>
+        <div class="chart-container">
+          <canvas id="chartWeeklyHabits" class="chart-canvas" width="400" height="180"></canvas>
+        </div>
+      </div>
+
+      <!-- رسم بياني لشرب الماء -->
+      <div class="card">
+        <h4 class="card-title" style="margin-bottom: 8px;"><span>💧</span> مؤشر ترطيب الجسم وشرب الماء</h4>
+        <div class="chart-container">
+          <canvas id="chartWeeklyWater" class="chart-canvas" width="400" height="180"></canvas>
+        </div>
+      </div>
+
+      <!-- إعدادات التطبيق والموقع والنسخ الاحتياطي -->
+      <div class="card">
+        <h4 class="card-title" style="margin-bottom: 14px;"><span>⚙️</span> الإعدادات والنسخ الاحتياطي</h4>
+        
+        <div class="form-group">
+          <label class="form-label">المدينة لحساب مواقيت الصلاة محلياً:</label>
+          <select class="form-select" id="selCity" onchange="khutwaApp.changeCity(this.value)">
+            <!-- يتم تعبئتها من prayer.js -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">طريقة حساب مواقيت الصلاة:</label>
+          <select class="form-select" id="selCalculationMethod" onchange="khutwaApp.changeMethod(this.value)">
+            <option value="Egypt">الهيئة المصرية العامة للمساحة</option>
+            <option value="Makkah">أم القرى - مكة المكرمة</option>
+            <option value="MWL">رابطة العالم الإسلامي</option>
+            <option value="Gulf">منطقة الخليج العربي</option>
+            <option value="ISNA">الجمعية الإسلامية لأمريكا الشمالية</option>
+          </select>
+        </div>
+
+        <!-- مواعيد التنبيهات المخصصة -->
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px; margin-bottom: 14px;">
+          <div style="font-weight: 700; font-size: 0.88rem; margin-bottom: 10px; color: var(--accent-emerald-light);">⏰ مواعيد التذكير اليومي:</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+            <div>
+              <label class="form-label" style="font-size: 0.74rem;">أذكار الصباح:</label>
+              <input type="time" id="inputMorningTime" class="form-input" value="06:30" onchange="khutwaApp.saveReminderTimes()">
+            </div>
+            <div>
+              <label class="form-label" style="font-size: 0.74rem;">أذكار المساء:</label>
+              <input type="time" id="inputEveningTime" class="form-input" value="17:00" onchange="khutwaApp.saveReminderTimes()">
+            </div>
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 0.74rem;">مراجعة العادات المسائية:</label>
+            <input type="time" id="inputReviewTime" class="form-input" value="21:30" onchange="khutwaApp.saveReminderTimes()">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">نظام الإشعارات والأصوات:</label>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <button class="btn-primary" style="flex: 1;" onclick="khutwaApp.requestNotificationPermission()">🔔 تفعيل الإشعارات</button>
+            <button class="btn-icon" style="width: auto; padding: 0 12px;" onclick="khutwaApp.testNotification()" title="اختبار إشعار فوري">اختبار ⚡</button>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-icon" style="flex: 1; height: 38px; font-size: 0.8rem; width: auto;" onclick="khutwaApp.toggleAdhanPreview()">
+              🕌 تجربة الأذان الكامل
+            </button>
+            <button class="btn-icon" style="flex: 1; height: 38px; font-size: 0.8rem; width: auto;" onclick="khutwaApp.testChimeAudio()">
+              🔔 تجربة رنة الأذكار
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 20px; border-top: 1px solid var(--border-subtle); padding-top: 16px;">
+          <label class="form-label">بياناتك ملكك (حفظ ونسخ احتياطي):</label>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-icon" style="flex: 1; height: 42px; font-size: 0.88rem; width: auto;" onclick="khutwaApp.exportData()">
+              💾 تصدير نسخة احتياطية
+            </button>
+            <label class="btn-icon" style="flex: 1; height: 42px; font-size: 0.88rem; width: auto; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+              📂 استيراد نسخة
+              <input type="file" id="fileImportBackup" accept=".json" style="display: none;" onchange="khutwaApp.importData(event)">
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </div> <!-- نهاية app-container -->
+
+  <!-- ==================== شريط التنقل السفلي (Bottom Navigation) ==================== -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="khutwaApp.switchTab('tabToday', this)">
+      <span class="nav-icon">☀️</span>
+      <span>اليوم</span>
+    </button>
+    <button class="nav-item" onclick="khutwaApp.switchTab('tabSpiritual', this)">
+      <span class="nav-icon">🕌</span>
+      <span>الصلوات</span>
+    </button>
+    <button class="nav-item" onclick="khutwaApp.switchTab('tabHabits', this)">
+      <span class="nav-icon">🎯</span>
+      <span>العادات</span>
+    </button>
+    <button class="nav-item" onclick="khutwaApp.switchTab('tabShield', this)">
+      <span class="nav-icon">🛡️</span>
+      <span>حصن النقاء</span>
+    </button>
+    <button class="nav-item" onclick="khutwaApp.switchTab('tabAnalytics', this)">
+      <span class="nav-icon">📊</span>
+      <span>التحليلات</span>
+    </button>
+  </nav>
+
+  <!-- ==================== النوافذ المنبثقة (Modals) ==================== -->
+
+  <!-- نافذة إضافة عادة جديدة -->
+  <div id="modalAddHabit" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">إضافة عادة جديدة</h3>
+        <button class="btn-icon" onclick="khutwaApp.closeModal('modalAddHabit')">✕</button>
+      </div>
+      <form onsubmit="khutwaApp.submitNewHabit(event)">
+        <div class="form-group">
+          <label class="form-label">اسم العادة:</label>
+          <input type="text" id="inputHabitTitle" class="form-input" placeholder="مثال: قراءة 15 دقيقة، مشي، حفظ آية..." required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">التصنيف:</label>
+          <select id="selectHabitCategory" class="form-select">
+            <option value="علم وقراءة">📖 علم وقراءة</option>
+            <option value="صحة ولياقة">🏃 صحة ولياقة</option>
+            <option value="روحانيات">🕌 روحانيات</option>
+            <option value="انضباط شخصي">🌙 انضباط شخصي</option>
+            <option value="مهارات وعمل">💻 مهارات وعمل</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الأيقونة أو الرمز:</label>
+          <input type="text" id="inputHabitIcon" class="form-input" value="⭐" maxlength="4">
+        </div>
+        <button type="submit" class="btn-primary">حفظ العادة</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- نافذة مواجهة الرغبة والتهدئة (Urge Surfing) -->
+  <div id="modalUrgeSurfing" class="modal-overlay">
+    <div class="modal-box" style="text-align: center;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: #818cf8;">🌊 موجة الرغبة ستمر</h3>
+        <button class="btn-icon" onclick="khutwaApp.closeModal('modalUrgeSurfing')">✕</button>
+      </div>
+      
+      <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6;">
+        الرغبة مثل موجة البحر، ترتفع وتصل لقمة شدتها خلال 5 إلى 10 دقائق ثم تنحدر وتتلاشى تماماً. تنفس بهدوء مع الدائرة ولا تستجب للإلحاح اللحظي.
+      </p>
+
+      <div class="breathing-circle-wrapper">
+        <div class="breathing-circle" id="breathCircle">
+          شهيق.. زفير
+        </div>
+        <div class="breathing-prompt" id="breathPrompt">تنفس بعمق وبطء...</div>
+      </div>
+
+      <div style="background: rgba(255, 255, 255, 0.04); padding: 12px; border-radius: var(--radius-md); font-size: 0.84rem; margin-bottom: 16px; color: #fef08a;">
+        "إنما النصر صبر ساعة، ولذة الانتصار على نفسك أعظم بآلاف المرات من لذة الانتكاسة المؤقتة."
+      </div>
+
+      <button class="btn-primary" onclick="khutwaApp.closeModal('modalUrgeSurfing')">
+        الحمد لله، تجاوزت الموقف بثبات 💪
+      </button>
+    </div>
+  </div>
+
+  <!-- نافذة تسجيل العثرة والمراجعة برحمة ودون جلد ذات -->
+  <div id="modalRelapse" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: #fda4af;">❤️‍🩹 تجديد العهد والبداية من جديد</h3>
+        <button class="btn-icon" onclick="khutwaApp.closeModal('modalRelapse')">✕</button>
+      </div>
+      <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 14px;">
+        العثرة لا تمحو مسيرتك السابقة ولا تعيدك لنقطة الصفر في دماغك. المهم هو التعلم من الموقف والنهوض فوراً.
+      </p>
+      <form onsubmit="khutwaApp.submitRelapse(event)">
+        <div class="form-group">
+          <label class="form-label">ما الذي أدى للموقف؟ (المحفز / Trigger):</label>
+          <input type="text" id="inputRelapseTrigger" class="form-input" placeholder="مثال: سهر مفرط، فراغ، توتر، البقاء وحيداً مع الهاتف..." required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">قرار وقائي للمستقبل:</label>
+          <textarea id="inputRelapseNote" class="form-textarea" rows="2" placeholder="ما الخطوة التي ستقوم بها الآن لمنع تكرار نفس السبب؟"></textarea>
+        </div>
+        <button type="submit" class="btn-primary" style="background: #e11d48;">
+          تأكيد وإعادة توجيه البوصلة فوراً 🚀
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- نافذة تأكيد إلغاء صلاة أو ذكر مسجل لمنع الخطأ اللمسي -->
+  <div id="modalConfirmUnlock" class="modal-overlay">
+    <div class="modal-box" style="text-align: center;">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: #f59e0b;">🔒 تأكيد تعديل الحالة</h3>
+        <button class="btn-icon" onclick="khutwaApp.closeModal('modalConfirmUnlock')">✕</button>
+      </div>
+      <p id="txtConfirmUnlockMsg" style="font-size: 0.92rem; color: var(--text-main); margin-bottom: 18px; line-height: 1.6;">
+        لقد سجلت هذه الصلاة بالفعل. هل تريد بالتأكيد إلغاء تسجيلها؟
+      </p>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn-primary" style="flex: 1; background: #e11d48;" onclick="khutwaApp.confirmUnlockAction()">
+          نعم، أريد الإلغاء
+        </button>
+        <button class="btn-icon" style="flex: 1; height: auto; border-radius: var(--radius-md); font-weight: 700;" onclick="khutwaApp.closeModal('modalConfirmUnlock')">
+          تراجع وإبقاء الصلاة ✓
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة إرشادية لطريقة إضافة التطبيق لأيقونة الشاشة الرئيسية بدون كروم -->
+  <div id="modalInstallGuide" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: #34d399;">📲 إضافة التطبيق لشاشة هاتفك</h3>
+        <button class="btn-icon" onclick="khutwaApp.closeModal('modalInstallGuide')">✕</button>
+      </div>
+      <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.6;">
+        لكي يفتح التطبيق كـ <strong>أيقونة مستقلة على شاشتك</strong> بملء الشاشة وبدون شريط متصفح جوجل كروم وبدون إنترنت:
+      </p>
+
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px; margin-bottom: 12px;">
+        <h4 style="font-size: 0.92rem; font-weight: 700; color: #38bdf8; margin-bottom: 6px;">🤖 على هواتف أندرويد (Google Chrome):</h4>
+        <ol style="padding-right: 18px; font-size: 0.82rem; color: var(--text-main); line-height: 1.8;">
+          <li>اضغط على <strong>قائمة الثلاث نقاط (⋮)</strong> في أعلى متصفح كروم.</li>
+          <li>اضغط على <strong>"تثبيت التطبيق" (Install app)</strong> أو <strong>"إضافة إلى الشاشة الرئيسية" (Add to Home screen)</strong>.</li>
+          <li>اضغط <strong>"إضافة" (Add)</strong> للتأكيد.</li>
+          <li>ستنزل أيقونة خُطوة على شاشتك الرئيسية، وعند فتحها تفتح شاشة كاملة بدون شريط كروم وبدون إنترنت!</li>
+        </ol>
+      </div>
+
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px; margin-bottom: 16px;">
+        <h4 style="font-size: 0.92rem; font-weight: 700; color: #a78bfa; margin-bottom: 6px;">🍏 على هواتف آيفون (Safari):</h4>
+        <ol style="padding-right: 18px; font-size: 0.82rem; color: var(--text-main); line-height: 1.8;">
+          <li>اضغط على <strong>زر المشاركة (Share ⎋)</strong> في أسفل متصفح Safari.</li>
+          <li>انزل للأسفل واختر <strong>"إضافة إلى الصفحة الرئيسية" (Add to Home Screen)</strong>.</li>
+          <li>اضغط على <strong>"إضافة" (Add)</strong> في الأعلى.</li>
+        </ol>
+      </div>
+
+      <button class="btn-primary" onclick="khutwaApp.closeModal('modalInstallGuide')">
+        فهمت، سأضيفه الآن 👍
+      </button>
+    </div>
+  </div>
+
+  <!-- إشعار توست (Toast) المنبثق للتأكيدات -->
+  <div id="toastMessage" class="toast-msg">
+    <span id="toastIcon">✨</span>
+    <span id="toastText">تم بنجاح</span>
+  </div>
+
+  <!-- ملفات الجافاسكريبت المترابطة -->
+  <script src="js/prayer.js"></script>
+  <script src="js/athkar.js"></script>
+  <script src="js/habits.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
